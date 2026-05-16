@@ -12,7 +12,7 @@ app.use(cors());
 app.use(express.json());
 
 // Initialize Gemini API
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY as string });
 
 app.get('/', (req, res) => {
   res.send('CodeMorph AI API is running');
