@@ -174,13 +174,11 @@ app.post('/api/tutor', async (req, res) => {
 
     const systemInstruction = modePromptMap[mode] || modePromptMap['Beginner'];
 
-    // Format history for Gemini (roles: 'user' and 'model')
     const contents = messages.map((msg: any) => ({
       role: msg.role === 'assistant' ? 'model' : 'user',
       parts: [{ text: msg.content }]
     }));
 
-    // Prepend system instruction as the first user message (workaround if systemInstruction isn't explicitly supported in this genai version)
     contents.unshift({
       role: 'user',
       parts: [{ text: `SYSTEM INSTRUCTION: ${systemInstruction}. Please respond to the following messages accordingly.` }]
@@ -196,6 +194,53 @@ app.post('/api/tutor', async (req, res) => {
   } catch (error) {
     console.error('Error in AI Tutor:', error);
     res.status(500).json({ error: 'Failed to get tutor response' });
+  }
+});
+
+// AI Code Visualizer Route
+app.post('/api/visualize', async (req, res) => {
+  try {
+    const { code, language } = req.body;
+
+    if (!code || !language) {
+      return res.status(400).json({ error: 'Code and language are required' });
+    }
+
+    const prompt = `You are a Code Execution Flow Engine.
+Analyze the following ${language} code and simulate its execution step-by-step.
+Return ONLY a strictly valid JSON array of objects. Do not include markdown formatting or backticks.
+If the code is invalid or too long, simulate up to the first 20 steps or return a syntax error in the first step.
+Each object in the array represents a single step in execution and MUST match this exact schema:
+{
+  "lineNumber": number (the 1-indexed line number currently executing),
+  "variables": { "varName": "value as string" },
+  "output": string (any console output generated so far),
+  "explanation": string (short 1-sentence explanation of what this line does)
+}
+
+Code:
+${code}`;
+
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: prompt,
+    });
+
+    let rawText = response.text || '';
+    rawText = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
+    
+    let steps = [];
+    try {
+      steps = JSON.parse(rawText);
+    } catch (e) {
+      console.error("Failed to parse visualizer JSON:", rawText);
+      return res.status(500).json({ error: 'AI failed to generate valid trace.' });
+    }
+
+    res.json({ steps });
+  } catch (error) {
+    console.error('Error in Visualizer:', error);
+    res.status(500).json({ error: 'Failed to generate execution trace' });
   }
 });
 
