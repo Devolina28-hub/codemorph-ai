@@ -139,9 +139,11 @@ export default function Home() {
             </div>
             <h3 className="text-xl font-bold">Daily Challenge</h3>
             <p className="text-sm text-slate-300 mb-6">Solve today's algorithmic puzzle and earn 50 XP.</p>
-            <button className="px-6 py-3 bg-white text-slate-900 rounded-xl font-bold hover:bg-slate-200 transition-colors w-full shadow-[0_0_20px_rgba(255,255,255,0.3)]">
-              Start Challenge
-            </button>
+            <Link href="/tutor">
+              <button className="px-6 py-3 bg-white text-slate-900 rounded-xl font-bold hover:bg-slate-200 transition-colors w-full shadow-[0_0_20px_rgba(255,255,255,0.3)]">
+                Start Challenge
+              </button>
+            </Link>
           </div>
         </motion.div>
       </div>
